@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Blooming Pathways — Let it flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --text:#eef2f6; --muted:rgba(238,242,246,0.66); --faint:rgba(238,242,246,0.36);
+  --c1:#8fe0e3; --c2:#a9c4f0; --c3:#cbb6ec; --line:rgba(190,210,235,0.18);
+  --serif:"Fraunces",Georgia,serif; --sans:"Poppins",system-ui,sans-serif; --ease:cubic-bezier(.22,1,.36,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{ font-family:var(--sans); color:var(--text); overflow:hidden; min-height:100vh; cursor:none;
+  background:linear-gradient(180deg,#0a1226 0%, #0e1a36 32%, #15315a 60%, #0c2647 100%); }
+@media(hover:none){ body{cursor:auto} }
+/* faint star/haze sky */
+.sky{ position:fixed; inset:0 0 42% 0; z-index:1; pointer-events:none;
+  background:radial-gradient(120% 90% at 70% 10%, rgba(203,182,236,.18), transparent 55%),
+             radial-gradient(90% 70% at 20% 0%, rgba(143,224,227,.14), transparent 60%); }
+#water{ position:fixed; left:0; right:0; bottom:0; height:62%; z-index:2; display:block; cursor:none; }
+.atmo{ position:fixed; inset:0; z-index:3; pointer-events:none;
+  background:radial-gradient(80% 60% at 50% 26%, transparent 50%, rgba(8,12,28,.5) 100%); }
+.cur-dot,.cur-ring{ position:fixed; top:0; left:0; border-radius:50%; pointer-events:none; z-index:60; transform:translate(-50%,-50%); mix-blend-mode:screen; }
+.cur-dot{ width:6px; height:6px; background:var(--c1); }
+.cur-ring{ width:34px; height:34px; border:1px solid rgba(169,196,240,.55); transition:width .3s,height .3s; }
+@media(hover:none){ .cur-dot,.cur-ring{display:none} }
+
+header{ position:fixed; top:0; left:0; right:0; z-index:40; }
+.nav{ width:min(92%,1200px); margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:1.6rem 0; }
+.brand{ display:flex; align-items:center; gap:.7rem; }
+.mark{ width:34px;height:34px;border-radius:11px;background:conic-gradient(from 120deg,var(--c3),var(--c2),var(--c1),var(--c3)); box-shadow:0 6px 20px -8px rgba(150,180,240,.7); }
+.brand .name{ font-family:var(--serif); font-weight:500; font-size:1.15rem; }
+.nav-right{ display:flex; align-items:center; gap:2rem; }
+.nav-right a{ color:var(--muted); text-decoration:none; font-size:.9rem; cursor:none; transition:color .3s; }
+.nav-right a:hover{ color:var(--text); }
+.nav-cta{ padding:.6rem 1.3rem; border-radius:100px; border:1px solid var(--line); background:rgba(255,255,255,.03); backdrop-filter:blur(8px); }
+
+.hero{ position:relative; z-index:10; height:58vh; min-height:420px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:6rem 1.5rem 0; }
+.kicker{ font-size:.74rem; letter-spacing:.4em; text-transform:uppercase; color:var(--faint); margin-bottom:1.8rem; opacity:0; }
+.kicker b{ color:var(--c2); font-weight:500; }
+h1{ font-family:var(--serif); font-weight:300; line-height:1.0; letter-spacing:-.02em; font-size:clamp(3rem,9.5vw,7rem); margin-bottom:1.4rem; }
+h1 .row{ display:block; overflow:hidden; }
+h1 .row>span{ display:inline-block; transform:translateY(110%); }
+h1 em{ font-style:italic; background:linear-gradient(100deg,var(--c1),var(--c2) 55%,var(--c3)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.sub{ max-width:520px; color:var(--muted); font-weight:300; font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.7; margin-bottom:2.2rem; opacity:0; transform:translateY(14px); }
+.actions{ display:flex; gap:1rem; opacity:0; transform:translateY(14px); }
+.btn{ display:inline-flex; align-items:center; gap:.5rem; padding:1rem 2rem; border-radius:100px; font-weight:500; font-size:.92rem; text-decoration:none; cursor:none; color:#0a1226;
+  background:linear-gradient(100deg,var(--c1),var(--c2) 60%,var(--c3)); box-shadow:0 16px 44px -16px rgba(150,180,240,.8); transition:transform .4s var(--ease); }
+.btn:hover{ transform:translateY(-3px); }
+.btn-ghost{ color:var(--text); background:transparent; border:1px solid var(--line); box-shadow:none; backdrop-filter:blur(8px); }
+
+.waterhint{ position:fixed; bottom:1.4rem; left:50%; transform:translateX(-50%); z-index:30; font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:rgba(238,242,246,.55); pointer-events:none; opacity:0; transition:opacity 1s; }
+.waterhint.show{ opacity:.85; }
+.waterhint.gone{ opacity:0; }
+.sound{ position:fixed; top:1.4rem; right:1.4rem; z-index:50; width:44px;height:44px;border-radius:50%;border:1px solid var(--line); background:rgba(255,255,255,.04); backdrop-filter:blur(8px); color:var(--c1); cursor:none; display:grid;place-items:center; transition:.3s; }
+.sound.on{ background:linear-gradient(100deg,var(--c1),var(--c2)); color:#0a1226; border-color:transparent; }
+@media(max-width:760px){ body{cursor:auto} .cur-dot,.cur-ring{display:none} .nav-right a:not(.nav-cta){display:none} .actions{flex-direction:column} }
+@media(prefers-reduced-motion:reduce){ *{animation:none!important} }
+</style>
+</head>
+<body>
+<div class="sky"></div>
+<canvas id="water"></canvas>
+<div class="atmo"></div>
+<div class="cur-dot"></div><div class="cur-ring"></div>
+
+<button class="sound" id="sound" title="Sound" aria-label="Toggle sound">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path class="wv" d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+</button>
+
+<header><div class="nav">
+  <div class="brand"><span class="mark"></span><span class="name">Blooming Pathways</span></div>
+  <nav class="nav-right"><a href="#">Coaching</a><a href="#">How it works</a><a href="#">Stories</a><a href="#" class="nav-cta">Book a free call</a></nav>
+</div></header>
+
+<main class="hero">
+  <p class="kicker"><b>Blooming Pathways</b> &nbsp;·&nbsp; Health &amp; Mindset Coaching</p>
+  <h1><span class="row"><span data-w>Let your worries</span></span><span class="row"><span data-w><em>flow.</em></span></span></h1>
+  <p class="sub">Calm doesn't mean still — it means moving gently in the right direction. Trail the water below. Toss a thought in and watch it ripple out.</p>
+  <div class="actions"><a href="#" class="btn">Begin your pathway →</a><a href="#" class="btn btn-ghost">Take a breath</a></div>
+</main>
+
+<div class="waterhint" id="waterhint">Move across the water · click to skip a stone</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+/* ===================== Interactive River ===================== */
+(function(){
+  const canvas=document.getElementById('water');
+  if(typeof THREE==='undefined') return;
+  let renderer; try{ renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true}); }catch(e){ return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+
+  const scene=new THREE.Scene();
+  const cam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+  const RIP=10;
+  const ripples=[]; for(let i=0;i<RIP;i++) ripples.push(new THREE.Vector3(0,0,-999)); let head=0;
+
+  const U={
+    uTime:{value:0}, uRes:{value:new THREE.Vector2(1,1)}, uMouse:{value:new THREE.Vector2(-1,-1)},
+    uRipples:{value:ripples},
+    cDeep:{value:new THREE.Color('#0c2747')}, cMid:{value:new THREE.Color('#1f6f86')},
+    cShallow:{value:new THREE.Color('#9fe6e0')}, cSky:{value:new THREE.Color('#caa9e8')}, cFoam:{value:new THREE.Color('#eafcff')}
+  };
+  const mat=new THREE.ShaderMaterial({ uniforms:U, transparent:true,
+    vertexShader:'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position,1.0); }',
+    fragmentShader:[
+      'precision highp float; varying vec2 vUv;',
+      'uniform float uTime; uniform vec2 uRes, uMouse; uniform vec3 uRipples['+RIP+'];',
+      'uniform vec3 cDeep,cMid,cShallow,cSky,cFoam;',
+      'vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.0+2.0*fract(sin(p)*43758.5453);}',
+      'float vn(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);',
+      ' return mix(mix(dot(h2(i+vec2(0,0)),f-vec2(0,0)),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),',
+      '            mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}',
+      'float fbm(vec2 p){float v=0.0,a=0.5;for(int i=0;i<5;i++){v+=a*vn(p);p=p*2.0+vec2(3.1,1.7);a*=0.5;}return v;}',
+      'float waterH(vec2 p){',
+      '  float persp=mix(2.4,0.6,p.y);',          // near (bottom) bigger waves
+      '  vec2 q=vec2(p.x*persp, p.y*persp*1.6);',
+      '  float t=uTime;',
+      '  float h=fbm(q*2.4+vec2(t*0.55,0.0));',     // flow left->right
+      '  h+=0.5*fbm(q*5.0+vec2(t*0.9,t*0.12));',
+      '  h+=0.25*fbm(q*9.0-vec2(t*0.6,0.0));',
+      '  if(uMouse.x>=0.0){ float md=distance(p,uMouse); h+=0.5*exp(-md*7.0)*sin(md*22.0-t*5.0); }',
+      '  for(int i=0;i<'+RIP+';i++){ vec3 r=uRipples[i]; float act=step(0.0,r.z); float age=uTime-r.z;',
+      '    float win=act*step(0.0,age)*step(age,4.0); float d=distance(p,r.xy); float fr=age*0.42;',
+      '    float ring=sin(d*46.0-age*8.0)*exp(-age*1.4)*exp(-d*2.4)*smoothstep(0.6,0.0,abs(d-fr)); h+=ring*win*0.85; }',
+      '  return h;',
+      '}',
+      'void main(){',
+      '  vec2 p=vUv; float e=1.3/max(uRes.x,uRes.y);',
+      '  float h=waterH(p);',
+      '  float hx=waterH(p+vec2(e,0.0))-waterH(p-vec2(e,0.0));',
+      '  float hy=waterH(p+vec2(0.0,e))-waterH(p-vec2(0.0,e));',
+      '  vec3 N=normalize(vec3(-hx*5.0,-hy*5.0,1.0));',
+      '  vec3 base=mix(cDeep,cMid,smoothstep(0.0,0.55,p.y));',
+      '  base=mix(base,cShallow,smoothstep(0.62,1.0,p.y+h*0.3));',
+      '  vec3 L=normalize(vec3(0.2,0.5,0.82));',
+      '  float diff=clamp(dot(N,L)*0.5+0.5,0.0,1.0);',
+      '  float spec=pow(clamp(dot(N,normalize(L+vec3(0.0,0.0,1.0))),0.0,1.0),48.0);',
+      '  vec3 col=base*(0.78+diff*0.32);',
+      '  col+=cSky*pow(clamp(N.y,0.0,1.0),2.0)*0.18;',     // sky reflection
+      '  col+=vec3(1.0)*spec*0.7;',
+      '  float foam=smoothstep(0.45,0.75,h)*smoothstep(1.0,0.4,p.y);',
+      '  col=mix(col,cFoam,foam*0.5);',
+      '  float topFade=smoothstep(1.0,0.82,p.y);',          // blend with sky at horizon
+      '  gl_FragColor=vec4(col, topFade);',
+      '}'
+    ].join('\n')
+  });
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),mat));
+
+  function size(){ const r=canvas.getBoundingClientRect(); const w=Math.max(2,r.width),h=Math.max(2,r.height); renderer.setSize(w,h,false); U.uRes.value.set(w,h); }
+  window.addEventListener('resize',size); size();
+
+  const hint=document.getElementById('waterhint'); let touched=false; setTimeout(()=>hint.classList.add('show'),2600);
+  function uvFrom(e){ const b=canvas.getBoundingClientRect(); return [ (e.clientX-b.left)/b.width, 1.0-(e.clientY-b.top)/b.height ]; }
+  let last=0;
+  canvas.addEventListener('pointermove',e=>{ const n=performance.now(); if(n-last<40)return; last=n; const [u,v]=uvFrom(e); U.uMouse.value.set(u,v); mark(); startAudio(); });
+  canvas.addEventListener('pointerleave',()=>U.uMouse.value.set(-1,-1));
+  canvas.addEventListener('pointerdown',e=>{ const [u,v]=uvFrom(e); ripples[head].set(u,v,U.uTime.value); head=(head+1)%RIP; mark(); startAudio(); plonk(); });
+  function mark(){ if(!touched){touched=true; hint.classList.remove('show'); hint.classList.add('gone'); } }
+
+  const clock=new THREE.Clock();
+  (function loop(){ U.uTime.value=clock.getElapsedTime(); renderer.render(scene,cam); requestAnimationFrame(loop); })();
+
+  /* ===================== Sound (WebAudio, synthesized) ===================== */
+  let actx,ambGain,soundOn=false,audioReady=false;
+  const soundBtn=document.getElementById('sound');
+  function startAudio(){
+    if(audioReady){ if(actx&&actx.state==='suspended') actx.resume(); return; }
+    audioReady=true;
+    const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    actx=new AC();
+    const dur=2.2; const buf=actx.createBuffer(1,Math.floor(actx.sampleRate*dur),actx.sampleRate);
+    const data=buf.getChannelData(0); for(let i=0;i<data.length;i++) data[i]=Math.random()*2-1;
+    const src=actx.createBufferSource(); src.buffer=buf; src.loop=true;
+    const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=650;
+    const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=420; bp.Q.value=0.5;
+    ambGain=actx.createGain(); ambGain.gain.value=0.0;
+    src.connect(lp); lp.connect(bp); bp.connect(ambGain); ambGain.connect(actx.destination); src.start();
+    const lfo=actx.createOscillator(); lfo.frequency.value=0.18; const lg=actx.createGain(); lg.gain.value=180; lfo.connect(lg); lg.connect(lp.frequency); lfo.start();
+    setSound(true);
+  }
+  function setSound(on){ soundOn=on; soundBtn.classList.toggle('on',on); soundBtn.querySelector('.wv').style.opacity=on?1:.3;
+    if(ambGain&&actx) ambGain.gain.linearRampToValueAtTime(on?0.075:0.0, actx.currentTime+0.6);
+    if(on&&actx&&actx.state==='suspended') actx.resume(); }
+  soundBtn.addEventListener('click',()=>{ if(!audioReady){ startAudio(); } else setSound(!soundOn); });
+  function plonk(){
+    if(!actx||!soundOn) return; const t=actx.currentTime;
+    const o=actx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(560,t); o.frequency.exponentialRampToValueAtTime(150,t+0.18);
+    const g=actx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t+0.45);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+0.5);
+    const nb=actx.createBuffer(1,Math.floor(actx.sampleRate*0.25),actx.sampleRate); const nd=nb.getChannelData(0);
+    for(let i=0;i<nd.length;i++) nd[i]=(Math.random()*2-1)*Math.pow(1-i/nd.length,2.2);
+    const ns=actx.createBufferSource(); ns.buffer=nb; const nf=actx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=1100; nf.Q.value=0.8;
+    const ng=actx.createGain(); ng.gain.value=0.13; ns.connect(nf); nf.connect(ng); ng.connect(actx.destination); ns.start(t);
+  }
+
+  /* ===================== GSAP intro ===================== */
+  function intro(){ const g=window.gsap;
+    if(!g){ document.querySelectorAll('[data-w]').forEach(s=>s.style.transform='none'); ['.kicker','.sub','.actions'].forEach(s=>{const el=document.querySelector(s); if(el){el.style.opacity=1; el.style.transform='none';}}); return; }
+    const tl=g.timeline({delay:0.2});
+    tl.to('.kicker',{opacity:1,duration:1.1,ease:'power2.out'})
+      .to('[data-w]',{y:'0%',duration:1.2,stagger:0.12,ease:'expo.out'},'-=0.7')
+      .to('.sub',{opacity:1,y:0,duration:1.0,ease:'power3.out'},'-=0.6')
+      .to('.actions',{opacity:1,y:0,duration:1.0,ease:'power3.out'},'-=0.7');
+  }
+  if(document.readyState==='complete') intro(); else window.addEventListener('load',intro);
+})();
+/* custom cursor */
+(function(){ const dot=document.querySelector('.cur-dot'),ring=document.querySelector('.cur-ring'); if(!dot||!ring||!matchMedia('(hover:hover)').matches)return;
+  let rx=0,ry=0,dx=0,dy=0; addEventListener('pointermove',e=>{dx=e.clientX;dy=e.clientY;dot.style.transform=`translate(${dx}px,${dy}px) translate(-50%,-50%)`;});
+  (function f(){rx+=(dx-rx)*0.2;ry+=(dy-ry)*0.2;ring.style.transform=`translate(${rx}px,${ry}px) translate(-50%,-50%)`;requestAnimationFrame(f);})();
+})();
+</script>
+</body>
+</html>
