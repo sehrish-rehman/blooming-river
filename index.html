@@ -62,10 +62,6 @@ h1 em{ font-style:italic; background:linear-gradient(100deg,var(--c1),var(--c2) 
 <div class="atmo"></div>
 <div class="cur-dot"></div><div class="cur-ring"></div>
 
-<button class="sound" id="sound" title="Sound" aria-label="Toggle sound">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path class="wv" d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
-</button>
-
 <header><div class="nav">
   <div class="brand"><span class="mark"></span><span class="name">Blooming Pathways</span></div>
   <nav class="nav-right"><a href="#">Coaching</a><a href="#">How it works</a><a href="#">Stories</a><a href="#" class="nav-cta">Book a free call</a></nav>
@@ -113,13 +109,13 @@ h1 em{ font-style:italic; background:linear-gradient(100deg,var(--c1),var(--c2) 
       '  float depth=HOR-uv.y; float persp=0.06/(depth+0.035);',
       '  vec2 wp=vec2((uv.x-0.5)*uAspect*persp*5.0, persp*4.0 + uTime*0.0);',
       '  float t=uTime;',
-      '  float h=fbm(wp*1.4+vec2(t*0.14,-t*0.55));',
-      '  h+=0.5*fbm(wp*3.0+vec2(-t*0.1,-t*0.9));',
-      '  h+=0.25*fbm(wp*6.5+vec2(t*0.05,-t*1.3));',
-      '  if(uMouse.x>=0.0 && uMouse.y<HOR){ float md=distance(uv,uMouse); h+=0.4*exp(-md*9.0)*sin(md*26.0-t*5.0); }',
+      '  float h=fbm(wp*1.4+vec2(t*0.05,-t*0.20));',     // slow, calm drift
+      '  h+=0.5*fbm(wp*3.0+vec2(-t*0.04,-t*0.32));',
+      '  h+=0.22*fbm(wp*6.5+vec2(t*0.02,-t*0.45));',
+      '  if(uMouse.x>=0.0 && uMouse.y<HOR){ float md=distance(uv,uMouse); h+=0.35*exp(-md*9.0)*sin(md*22.0-t*2.0); }',
       '  for(int i=0;i<'+RIP+';i++){ vec3 r=uRipples[i]; float act=step(0.0,r.z); float age=uTime-r.z;',
-      '    float win=act*step(0.0,age)*step(age,4.0); float d=distance(uv,r.xy); float fr=age*0.34;',
-      '    float ring=sin(d*55.0-age*8.0)*exp(-age*1.5)*exp(-d*3.0)*smoothstep(0.5,0.0,abs(d-fr)); h+=ring*win*0.7; }',
+      '    float win=act*step(0.0,age)*step(age,7.0); float d=distance(uv,r.xy); float fr=age*0.20;',
+      '    float ring=sin(d*48.0-age*4.0)*exp(-age*0.9)*exp(-d*3.0)*smoothstep(0.5,0.0,abs(d-fr)); h+=ring*win*0.6; }',
       '  return h;',
       '}',
       'void main(){',
@@ -143,7 +139,7 @@ h1 em{ font-style:italic; background:linear-gradient(100deg,var(--c1),var(--c2) 
       '    col=mix(cWaterDeep,cWaterNear,near);',
       '    // moonlight reflection column shimmering down the centre',
       '    float colm=smoothstep(0.20,0.0,abs((uv.x-0.5)*uAspect));',
-      '    float wobble=colm*(0.4+0.6*pow(clamp(0.5+0.5*sin(h*14.0+uTime*1.5),0.0,1.0),2.5));',
+      '    float wobble=colm*(0.4+0.6*pow(clamp(0.5+0.5*sin(h*14.0+uTime*0.5),0.0,1.0),2.5));',
       '    col+=cMoon*wobble*mix(0.05,0.55,near);',
       '    // crest sparkle + foam',
       '    float spec=pow(clamp(dot(N,normalize(vec3(0.0,0.4,0.9))),0.0,1.0),60.0);',
@@ -166,49 +162,12 @@ h1 em{ font-style:italic; background:linear-gradient(100deg,var(--c1),var(--c2) 
   const hint=document.getElementById('waterhint'); let touched=false; setTimeout(()=>hint.classList.add('show'),2800);
   function uvFrom(e){ return [ e.clientX/innerWidth, 1.0-e.clientY/innerHeight ]; }
   let last=0;
-  window.addEventListener('pointermove',e=>{ const n=performance.now(); if(n-last<40)return; last=n; const [u,v]=uvFrom(e); U.uMouse.value.set(u,v); mark(); startAudio(); });
-  window.addEventListener('pointerdown',e=>{ const [u,v]=uvFrom(e); if(v<0.60){ ripples[head].set(u,v,U.uTime.value); head=(head+1)%RIP; plonk(); } mark(); startAudio(); });
+  window.addEventListener('pointermove',e=>{ const n=performance.now(); if(n-last<40)return; last=n; const [u,v]=uvFrom(e); U.uMouse.value.set(u,v); mark(); });
+  window.addEventListener('pointerdown',e=>{ const [u,v]=uvFrom(e); if(v<0.60){ ripples[head].set(u,v,U.uTime.value); head=(head+1)%RIP; } mark(); });
   function mark(){ if(!touched){touched=true; hint.classList.remove('show'); hint.classList.add('gone'); } }
 
   const clock=new THREE.Clock();
   (function loop(){ U.uTime.value=clock.getElapsedTime(); renderer.render(scene,cam); requestAnimationFrame(loop); })();
-
-  /* ===================== Gentle water audio ===================== */
-  let actx,ambGain,soundOn=false,ready=false;
-  const soundBtn=document.getElementById('sound');
-  function brownNoiseBuffer(ctx,sec){
-    const b=ctx.createBuffer(1,Math.floor(ctx.sampleRate*sec),ctx.sampleRate); const d=b.getChannelData(0);
-    let last=0; for(let i=0;i<d.length;i++){ const w=Math.random()*2-1; last=(last+0.018*w)/1.018; d[i]=last*3.2; } return b;
-  }
-  function startAudio(){
-    if(ready){ if(actx&&actx.state==='suspended') actx.resume(); return; }
-    ready=true; const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; actx=new AC();
-    const src=actx.createBufferSource(); src.buffer=brownNoiseBuffer(actx,3); src.loop=true;
-    const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=420; lp.Q.value=0.3;
-    const hp=actx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=80;
-    ambGain=actx.createGain(); ambGain.gain.value=0.0;
-    src.connect(hp); hp.connect(lp); lp.connect(ambGain); ambGain.connect(actx.destination); src.start();
-    // very slow gentle movement of the cutoff = soft babbling
-    const lfo=actx.createOscillator(); lfo.frequency.value=0.08; const lg=actx.createGain(); lg.gain.value=110; lfo.connect(lg); lg.connect(lp.frequency); lfo.start();
-    setSound(true);
-  }
-  function setSound(on){ soundOn=on; soundBtn.classList.toggle('on',on); soundBtn.querySelector('.wv').style.opacity=on?1:.3;
-    if(ambGain&&actx) ambGain.gain.linearRampToValueAtTime(on?0.045:0.0, actx.currentTime+0.8);
-    if(on&&actx&&actx.state==='suspended') actx.resume(); }
-  soundBtn.addEventListener('click',()=>{ if(!ready) startAudio(); else setSound(!soundOn); });
-  function plonk(){
-    if(!actx||!soundOn) return; const t=actx.currentTime;
-    // soft water "bloop": pitch-dropping sine through a lowpass, smooth bell envelope
-    const o=actx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(560,t); o.frequency.exponentialRampToValueAtTime(170,t+0.16);
-    const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=900;
-    const g=actx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.14,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.55);
-    o.connect(lp); lp.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+0.6);
-    // faint, soft splash tail (low-passed brown noise, very quiet)
-    const ns=actx.createBufferSource(); ns.buffer=brownNoiseBuffer(actx,0.25);
-    const nlp=actx.createBiquadFilter(); nlp.type='lowpass'; nlp.frequency.value=600;
-    const ng=actx.createGain(); ng.gain.setValueAtTime(0.05,t); ng.gain.exponentialRampToValueAtTime(0.0001,t+0.3);
-    ns.connect(nlp); nlp.connect(ng); ng.connect(actx.destination); ns.start(t); ns.stop(t+0.3);
-  }
 
   /* intro */
   function intro(){ const g=window.gsap;
